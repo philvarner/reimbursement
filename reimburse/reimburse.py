@@ -27,10 +27,20 @@ class Day:
   date: datetime.date
   state: State
 
-  def combine(self, day2: Day) -> Day:
-    if self.date != day2.date:
+  def __eq__(self, other):
+    if self.__class__ is other.__class__:
+      return self.date == other.date
+    return NotImplemented
+
+  def __lt__(self, other):
+    if self.__class__ is other.__class__:
+      return self.date < other.date
+    return NotImplemented
+
+  def combine(self, other: Day) -> Day:
+    if self.date != other.date:
       raise Exception("tried to combine Days that had different dates")
-    return Day(self.date, self.state.combine(day2.state))
+    return Day(self.date, self.state.combine(other.state))
 
 class ProjectDays:
 
@@ -52,7 +62,7 @@ class ProjectDays:
   def __str__(self):
      return str(self.days)
 
-  def combine(self, project_days2: ProjectDays) -> ProjectDays:
+  def combine(self, other: ProjectDays) -> ProjectDays:
     pass
 
 
@@ -122,3 +132,18 @@ except:
   pass
 else:
   raise Exception("mismatched day should have failed, didn't")
+
+print(
+  Day(date=datetime.fromisoformat("2015-09-03"), state=State.OPEN) == 
+Day(date=datetime.fromisoformat("2015-09-04"), state=State.WORK_HIGH)
+  )
+
+print(
+    Day(date=datetime.fromisoformat("2015-09-03"), state=State.OPEN) <
+Day(date=datetime.fromisoformat("2015-09-04"), state=State.WORK_HIGH)
+  )
+
+print(
+  Day(date=datetime.fromisoformat("2015-09-04"), state=State.OPEN) == 
+Day(date=datetime.fromisoformat("2015-09-04"), state=State.WORK_HIGH)
+  )
