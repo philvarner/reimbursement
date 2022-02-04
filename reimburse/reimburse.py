@@ -8,13 +8,18 @@ from dataclasses import dataclass
 
 class State(Enum):
   OPEN = 1
-  WORK_HIGH = 2
-  WORK_LOW = 3
-  TRAVEL_HIGH = 4
-  TRAVEL_LOW = 5
+  TRAVEL_LOW = 2
+  TRAVEL_HIGH = 3
+  WORK_LOW = 4
+  WORK_HIGH = 5
+
+  def __lt__(self, other):
+     if self.__class__ is other.__class__:
+       return self.value < other.value
+     return NotImplemented
 
   def combine(self, state2: State) -> State:
-    pass
+    return max(self, state2)
 
 @dataclass
 class Day:
@@ -23,7 +28,9 @@ class Day:
   state: State
 
   def combine(self, day2: Day) -> Day:
-    pass
+    if self.date != day2.date:
+      raise Exception("tried to combine Days that had different dates")
+    return Day(self.date, self.state.combine(day2.state))
 
 class ProjectDays:
 
@@ -98,3 +105,20 @@ print(s4_p1)
 print(s4_p2)
 print(s4_p3)
 print(s4_p4)
+
+print(State.OPEN.combine(State.WORK_LOW))
+
+print(
+  Day(date=datetime.fromisoformat("2015-09-03"), state=State.OPEN).combine(
+  Day(date=datetime.fromisoformat("2015-09-03"), state=State.WORK_HIGH)
+  )
+  )
+
+try:
+  Day(date=datetime.fromisoformat("2015-09-03"), state=State.OPEN).combine(
+  Day(date=datetime.fromisoformat("2015-09-04"), state=State.WORK_HIGH)
+  )
+except: 
+  pass
+else:
+  raise Exception("mismatched day should have failed, didn't")
