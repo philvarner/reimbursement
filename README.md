@@ -1,13 +1,25 @@
-# reimbursement
+# Reimbursement Project
 
+## Setup and Running
 
-## Setup
+This was tested with Python 3.9.5.
+
+To execute, run:
 
 ```
-pyenv install 3.9.5
-pyenv local 3.9.5
-mkvenv
-swvenv
+python main.py 
+```
 
+## Running Test
+
+If running the tests, install pytest:
+
+```
 pip install pytest
+```
+
+Then run with:
+
+```
+pytest
 ```
