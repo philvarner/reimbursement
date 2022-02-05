@@ -17,8 +17,8 @@ class State(Enum):
             return self.value < other.value
         return NotImplemented
 
-    def __add__(self, state2: State) -> State:
-        return max(self, state2)
+    def __add__(self, other: State) -> State:
+        return max(self, other)
 
 REIMBURSEMENTS = { State.OPEN: 0, State.WORK_LOW: 75, State.WORK_HIGH: 85 }
 TRAVEL_ADJUSTMENT = -30
@@ -60,6 +60,7 @@ class ProjectDays:
 
     @classmethod
     def from_range(cls, start: str, end: str, state: State) -> None:
+        """create a set of project days from an inclusive start and end date"""
 
         start_date = datetime.fromisoformat(start)
         end_date = datetime.fromisoformat(end)
@@ -84,15 +85,14 @@ class ProjectDays:
 
     def __add__(self, other: ProjectDays) -> ProjectDays:
         all_days = sorted(self.days + other.days)
-
         def f(xs, y):
             if xs[-1] == y:
-                xs[-1] == xs[-1] + y
+                xs[-1] = xs[-1] + y
             else:
                 xs.append(y)
             return xs
 
-        return ProjectDays(reduce(f, all_days, all_days[0:1]))
+        return ProjectDays(reduce(f, all_days[1:], all_days[0:1]))
 
     def _populate_travel_days(self) -> ProjectDays:
         new_days = copy.deepcopy(self.days)
@@ -102,7 +102,7 @@ class ProjectDays:
                 or new_days[i + 1].state == State.OPEN
             ):
                 day.travel = True
-        return new_days
+        return ProjectDays(new_days)
 
     def reimbursement(self):
-        return sum([d.reimbursement() for d in self._populate_travel_days()])
+        return sum([d.reimbursement() for d in self._populate_travel_days().days])
