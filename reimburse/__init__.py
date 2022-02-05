@@ -22,6 +22,7 @@ class State(Enum):
 
 REIMBURSEMENTS = { State.OPEN: 0, State.WORK_LOW: 75, State.WORK_HIGH: 85 }
 TRAVEL_ADJUSTMENT = -30
+
 @dataclass
 class Day:
 
@@ -37,11 +38,6 @@ class Day:
     def __lt__(self, other):
         if self.__class__ is other.__class__:
             return self.date < other.date
-        return NotImplemented
-
-    def __gt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.date > other.date
         return NotImplemented
 
     def __add__(self, other: Day) -> Day:
