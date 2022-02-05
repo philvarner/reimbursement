@@ -9,10 +9,8 @@ import copy
 
 class State(Enum):
     OPEN = 1
-    TRAVEL_LOW = 2
-    TRAVEL_HIGH = 3
-    WORK_LOW = 4
-    WORK_HIGH = 5
+    WORK_LOW = 2
+    WORK_HIGH = 3
 
     def __lt__(self, other):
         if self.__class__ is other.__class__:
@@ -22,24 +20,14 @@ class State(Enum):
     def __add__(self, state2: State) -> State:
         return max(self, state2)
 
-    def reimbursement(self) -> int:
-        if self == self.TRAVEL_LOW:
-            return 45
-        elif self == self.TRAVEL_HIGH:
-            return 55
-        elif self == self.WORK_LOW:
-            return 75
-        elif self == self.WORK_HIGH:
-            return 85
-        else:
-            return 0
-
-
+REIMBURSEMENTS = { State.OPEN: 0, State.WORK_LOW: 75, State.WORK_HIGH: 85 }
+TRAVEL_ADJUSTMENT = -30
 @dataclass
 class Day:
 
     date: datetime.date
     state: State
+    travel: bool = False
 
     def __eq__(self, other):
         if self.__class__ is other.__class__:
@@ -62,6 +50,12 @@ class Day:
                 f"tried to combine Days that had different dates: {self.date} {other.date}"
             )
         return Day(self.date, self.state + other.state)
+
+    def reimbursement(self) -> int:
+        amt = REIMBURSEMENTS.get(self.state, 0)
+        if self.travel:
+            amt = max(0, amt + TRAVEL_ADJUSTMENT)
+        return amt
 
 
 class ProjectDays:
@@ -111,11 +105,8 @@ class ProjectDays:
                 new_days[i - 1].state == State.OPEN
                 or new_days[i + 1].state == State.OPEN
             ):
-                if day.state == State.WORK_HIGH:
-                    day.state = State.TRAVEL_HIGH
-                elif day.state == State.WORK_LOW:
-                    day.state = State.TRAVEL_LOW
+                day.travel = True
         return new_days
 
     def reimbursement(self):
-        return sum([d.state.reimbursement() for d in self._populate_travel_days()])
+        return sum([d.reimbursement() for d in self._populate_travel_days()])

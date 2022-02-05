@@ -20,6 +20,7 @@ def main():
     s2_p2 = ProjectDays.from_range("2015-09-02", "2015-09-06", State.WORK_HIGH)
     s2_p3 = ProjectDays.from_range("2015-09-06", "2015-09-08", State.WORK_LOW)
 
+    print((s2_p1 + s2_p2)._populate_travel_days())
     print((s2_p1 + s2_p2).reimbursement())
 
     # Set 3:
