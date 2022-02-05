@@ -7,27 +7,29 @@ from functools import reduce
 import copy
 
 
-class State(Enum):
+class DayType(Enum):
     OPEN = 1
-    WORK_LOW = 2
-    WORK_HIGH = 3
+    FULL_LOW = 2
+    FULL_HIGH = 3
 
     def __lt__(self, other):
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented
 
-    def __add__(self, other: State) -> State:
+    def __add__(self, other: DayType) -> DayType:
         return max(self, other)
 
-REIMBURSEMENTS = { State.OPEN: 0, State.WORK_LOW: 75, State.WORK_HIGH: 85 }
+
+REIMBURSEMENTS = {DayType.OPEN: 0, DayType.FULL_LOW: 75, DayType.FULL_HIGH: 85}
 TRAVEL_ADJUSTMENT = -30
+
 
 @dataclass
 class Day:
 
     date: datetime.date
-    state: State
+    state: DayType
     travel: bool = False
 
     def __eq__(self, other):
@@ -54,12 +56,12 @@ class Day:
         return amt
 
 
-class ProjectDays:
-    def __init__(self, days: List[Day]) -> ProjectDays:
+class Project:
+    def __init__(self, days: List[Day]) -> Project:
         self.days = days
 
     @classmethod
-    def from_range(cls, start: str, end: str, state: State) -> None:
+    def from_range(cls, start: str, end: str, state: DayType) -> None:
         """create a set of project days from an inclusive start and end date"""
 
         start_date = datetime.fromisoformat(start)
@@ -72,19 +74,20 @@ class ProjectDays:
         day_count = (
             end_date - start_date
         ).days + 3  # 3 = before + after + end inclusive
-        pd = ProjectDays(
+        pd = Project(
             [Day(pre_date + timedelta(days=x), state) for x in range(day_count)]
         )
-        pd.days[0].state = State.OPEN
-        pd.days[-1].state = State.OPEN
+        pd.days[0].state = DayType.OPEN
+        pd.days[-1].state = DayType.OPEN
 
         return pd
 
     def __str__(self):
         return str(self.days)
 
-    def __add__(self, other: ProjectDays) -> ProjectDays:
+    def __add__(self, other: Project) -> Project:
         all_days = sorted(self.days + other.days)
+
         def f(xs, y):
             if xs[-1] == y:
                 xs[-1] = xs[-1] + y
@@ -92,17 +95,17 @@ class ProjectDays:
                 xs.append(y)
             return xs
 
-        return ProjectDays(reduce(f, all_days[1:], all_days[0:1]))
+        return Project(reduce(f, all_days[1:], all_days[0:1]))
 
-    def _populate_travel_days(self) -> ProjectDays:
+    def populate_travel_days(self) -> Project:
         new_days = copy.deepcopy(self.days)
         for i, day in enumerate(new_days[1:-1], start=1):
             if (
-                new_days[i - 1].state == State.OPEN
-                or new_days[i + 1].state == State.OPEN
+                new_days[i - 1].state == DayType.OPEN
+                or new_days[i + 1].state == DayType.OPEN
             ):
                 day.travel = True
-        return ProjectDays(new_days)
+        return Project(new_days)
 
     def reimbursement(self):
-        return sum([d.reimbursement() for d in self._populate_travel_days().days])
+        return sum((d.reimbursement() for d in self.populate_travel_days().days))
